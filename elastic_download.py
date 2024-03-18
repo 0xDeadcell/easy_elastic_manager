@@ -150,6 +150,7 @@ def download_dashboards(client: Elasticsearch = None) -> dict:
     return dashboards
 
 
+
 if __name__ == "__main__":
     ES_URL = ENV.get("ES_URL", "")
     KIBANA_URI = ENV.get("KIBANA_URI", "")
