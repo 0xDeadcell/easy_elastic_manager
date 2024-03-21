@@ -1,3 +1,5 @@
 InquirerPy
 elasticsearch
 tabulate
+python-dotenv
+requests
