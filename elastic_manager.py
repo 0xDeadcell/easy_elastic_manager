@@ -173,10 +173,14 @@ def elastic_manager(source_client: Elasticsearch = None, target_client: Elastics
         elif action == "Upload Pipelines & Dashboards":
             upload_multiple_pipelines(client=source_client)
             upload_ndjson_objects(KIBANA_URI=SOURCE_KIBANA_URI, USERNAME=SOURCE_USERNAME, PASSWORD=SOURCE_PASSWORD)
-        elif action == "Print Local Pipelines":
+        elif action == "Print Local Pipelines & Dashboards":
             local_pipelines = _get_pipeline_paths()
             for pipeline in local_pipelines:
                 print(f"[*] {pipeline}")
+            with open(os.path.join(BASE_DIR, "stored_objects", "dashboards", "dashboards.ndjson"), "rb") as f:
+                dashboards = f.read()
+                dashboards = [json.loads(dashboard) for dashboard in dashboards.decode("utf-8").splitlines() if dashboard.strip()]
+                tabulate_dashboards(dashboards=dashboards)
             return elastic_manager(source_client=source_client, target_client=target_client)
         elif action == f'Migrate Current Pipelines & Dashboards -> {TARGET_ES_URL}':
             print("[*] Migrating pipelines...")
