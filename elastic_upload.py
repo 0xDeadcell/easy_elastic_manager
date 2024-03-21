@@ -9,11 +9,6 @@ import dotenv
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-ENV = dotenv.dotenv_values(os.path.join(BASE_DIR, ".env"))
-USERNAME = ENV.get("ES_USERNAME", "")
-PASSWORD = ENV.get("ES_PASSWORD", "")
-ES_URL = ENV.get("ES_URL", "")
-
 
 def upload_multiple_pipelines(client: Elasticsearch, pipeline_dir: str=os.path.join(BASE_DIR, "stored_objects", "pipelines")) -> dict:
     """
@@ -85,9 +80,11 @@ def _get_ndjson_object_paths(object_dir: str=os.path.join(BASE_DIR, "stored_obje
                 abs_dashboard_paths.append(os.path.abspath(os.path.join(root, matching_file)))
     return abs_dashboard_paths
 
-def upload_ndjson_objects(client: Elasticsearch, object_dir: str=os.path.join(BASE_DIR, "stored_objects", "dashboards")) -> dict:
+def upload_ndjson_objects(KIBANA_URI: str, USERNAME: str, PASSWORD: str, object_dir: str=os.path.join(BASE_DIR, "stored_objects", "dashboards")) -> dict:
     """
-    client: Elasticsearch client
+    KIBANA_URI: Kibana URI
+    USERNAME: Kibana username
+    PASSWORD: Kibana password
     object_dir: directory containing ndjson files
     
     Returns a dictionary of object paths and their upload success status
@@ -100,7 +97,6 @@ def upload_ndjson_objects(client: Elasticsearch, object_dir: str=os.path.join(BA
     # check if object_dir is a directory or a file
     f_name = os.path.basename(object_dir)
     for object_path in _get_ndjson_object_paths(object_dir):
-        KIBANA_URI = ENV.get("KIBANA_URI", "")
         print("[*] Uploading dashboards & other objects...")
 
         headers = {
@@ -144,7 +140,11 @@ def upload_ndjson_objects(client: Elasticsearch, object_dir: str=os.path.join(BA
 
 
 if __name__ == "__main__":
-    
+    # ENV = dotenv.dotenv_values(os.path.join(BASE_DIR, ".env"))
+    # USERNAME = ENV.get("ES_USERNAME", "")
+    # PASSWORD = ENV.get("ES_PASSWORD", "")
+    # ES_URL = ENV.get("ES_URL", "")
+
     from elastic_manager import setup_auth
 
     ES_URL = ENV.get("ES_URL", "")

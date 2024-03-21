@@ -8,10 +8,7 @@ from tabulate import tabulate
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-ENV = dotenv.dotenv_values(os.path.join(BASE_DIR, ".env"))
-USERNAME = ENV.get("ES_USERNAME", "")
-PASSWORD = ENV.get("ES_PASSWORD", "")
-ES_URL = ENV.get("ES_URL", "")
+
 
 # Download Pipelines
 def download_pipelines(client: Elasticsearch):
@@ -116,8 +113,9 @@ def tabulate_dashboards(dashboards: list):
     elif not reformatted_dashboards and not reformatted_visualizations and not reformatted_index_patterns:
         print("[-] No objects found...")
 
-def download_dashboards(client: Elasticsearch = None) -> dict:
-    KIBANA_URI = ENV.get("KIBANA_URI", "")
+def download_dashboards(KIBANA_URI: str=None, USERNAME: str=None, PASSWORD: str=None):
+
+    assert KIBANA_URI is not None, "Kibana URI is required..."
     print("[*] Downloading dashboards...")
 
     headers = {
@@ -152,6 +150,8 @@ def download_dashboards(client: Elasticsearch = None) -> dict:
 
 
 if __name__ == "__main__":
+    ENV = dotenv.dotenv_values(os.path.join(BASE_DIR, ".env"))
+
     ES_URL = ENV.get("ES_URL", "")
     KIBANA_URI = ENV.get("KIBANA_URI", "")
     from elastic_manager import setup_auth
@@ -162,7 +162,7 @@ if __name__ == "__main__":
     # results = download_pipelines(client=ES_URL)
     # print("[+] Pipelines downloaded successfully...")
     print("[*] Downloading dashboards...") 
-    dashboards = download_dashboards(client=authenticated_kibana_client)
+    dashboards = download_dashboards(KIBANA_URI=KIBANA_URI)
     # with open(os.path.join(BASE_DIR, "stored_objects", "dashboards", "dashboards.ndjson"), "wb") as f:
     #     f.write(dashboards)
     print("[+] Dashboards downloaded successfully...")
