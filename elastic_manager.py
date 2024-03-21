@@ -177,7 +177,7 @@ def elastic_manager(source_client: Elasticsearch = None, target_client: Elastics
             local_pipelines = _get_pipeline_paths()
             for pipeline in local_pipelines:
                 print(f"[*] {pipeline}")
-            return elastic_manager(client=source_client)
+            return elastic_manager(source_client=source_client, target_client=target_client)
         elif action == f'Migrate Current Pipelines & Dashboards -> {TARGET_ES_URL}':
             print("[*] Migrating pipelines...")
             migrate_pipelines(source_client=source_client, target_client=target_client)
