@@ -4,8 +4,8 @@ import requests
 import os
 import dotenv
 from tabulate import tabulate
-from elastic_download import _get_pipeline_paths, _get_pipeline_name, _get_dashboard_paths, download_pipelines, download_dashboards
-from elastic_upload import upload_pipeline, upload_multiple_pipelines, upload_ndjson_objects
+from elastic_download import download_pipelines, download_dashboards
+from elastic_upload import upload_multiple_pipelines, upload_ndjson_objects
 
 
 def migrate_pipelines(source_client: Elasticsearch, target_client: Elasticsearch, pipeline_dir: str=os.path.join(os.path.dirname(os.path.abspath(__file__)), "stored_objects", "pipelines")) -> dict:
@@ -66,7 +66,8 @@ if __name__ == "__main__":
         USERNAME=SOURCE_ES_USERNAME,
         PASSWORD=SOURCE_ES_PASSWORD,
         ENCODED_API_KEY=SOURCE_ENCODED_API_KEY,
-        KIBANA_URI=SOURCE_KIBANA_URI
+        KIBANA_URI=SOURCE_KIBANA_URI,
+        api_key_name="SOURCE_ENCODED_API_KEY"
     )
 
     target_client = setup_auth(
@@ -74,7 +75,8 @@ if __name__ == "__main__":
         USERNAME=ES_USERNAME,
         PASSWORD=ES_PASSWORD,
         ENCODED_API_KEY=ENCODED_API_KEY,
-        KIBANA_URI=KIBANA_URI
+        KIBANA_URI=KIBANA_URI,
+        api_key_name="ENCODED_API_KEY"
     )
 
     print("[*] Migrating pipelines...")

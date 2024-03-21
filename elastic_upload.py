@@ -140,10 +140,10 @@ def upload_ndjson_objects(KIBANA_URI: str, USERNAME: str, PASSWORD: str, object_
 
 
 if __name__ == "__main__":
-    # ENV = dotenv.dotenv_values(os.path.join(BASE_DIR, ".env"))
-    # USERNAME = ENV.get("ES_USERNAME", "")
-    # PASSWORD = ENV.get("ES_PASSWORD", "")
-    # ES_URL = ENV.get("ES_URL", "")
+    ENV = dotenv.dotenv_values(os.path.join(BASE_DIR, ".env"))
+    USERNAME = ENV.get("ES_USERNAME", "")
+    PASSWORD = ENV.get("ES_PASSWORD", "")
+    ES_URL = ENV.get("ES_URL", "")
 
     from elastic_manager import setup_auth
 

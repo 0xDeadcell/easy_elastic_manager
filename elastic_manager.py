@@ -1,6 +1,6 @@
 from InquirerPy import prompt
 from elasticsearch import Elasticsearch
-from elastic_upload import upload_pipeline, upload_ndjson_objects, upload_multiple_pipelines, _get_pipeline_paths
+from elastic_upload import upload_ndjson_objects, upload_multiple_pipelines, _get_pipeline_paths
 from elastic_download import download_pipelines, download_dashboards, tabulate_dashboards, tabulate_pipelines
 from elastic_migrate import migrate_pipelines, migrate_dashboards
 
@@ -8,6 +8,7 @@ from tabulate import tabulate
 import dotenv
 import json
 import os
+import time
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -28,7 +29,12 @@ def create_directories(directory: str = BASE_DIR) -> bool:
     print("[+] Created directories...")
     return True
 
-def setup_auth(USERNAME: str, PASSWORD: str, KIBANA_URI: str, ELASTIC_ENDPOINT: str, ENCODED_API_KEY: str=None) -> Elasticsearch:
+def setup_auth(USERNAME: str,
+               PASSWORD: str,
+               KIBANA_URI: str,
+               ELASTIC_ENDPOINT: str,
+               ENCODED_API_KEY: str=None,
+               api_key_name: str="ENCODED_API_KEY") -> Elasticsearch:
     # make a post request to the above endpoint to generate an API key
     if ENCODED_API_KEY:
         print("[*] API Key already exists, using existing key...")
@@ -43,7 +49,7 @@ def setup_auth(USERNAME: str, PASSWORD: str, KIBANA_URI: str, ELASTIC_ENDPOINT: 
 
         # save api key to .env file, overwrite any existing keys
         ENCODED_API_KEY = res["encoded"]
-        dotenv.set_key(os.path.join(BASE_DIR, ".env"), "ENCODED_API_KEY", ENCODED_API_KEY)
+        dotenv.set_key(os.path.join(BASE_DIR, ".env"), api_key_name, ENCODED_API_KEY)
         print("[+] API Key saved to .env file...")
 
     # create a new client with the generated API key
@@ -51,6 +57,7 @@ def setup_auth(USERNAME: str, PASSWORD: str, KIBANA_URI: str, ELASTIC_ENDPOINT: 
         ELASTIC_ENDPOINT,
         api_key=ENCODED_API_KEY
     )
+    time.sleep(2)
     if client.ping():
         print("[+] Connected to Elasticsearch...")
         table = tabulate(
@@ -64,6 +71,10 @@ def setup_auth(USERNAME: str, PASSWORD: str, KIBANA_URI: str, ELASTIC_ENDPOINT: 
             tablefmt="pretty"
         )
         print(table)
+    else:
+        print(f"[-] Could not connect to {ELASTIC_ENDPOINT}...")
+        print("[!] Exiting...")
+        exit(1)
 
     return client
 
@@ -81,7 +92,9 @@ def elastic_manager(source_client: Elasticsearch = None, target_client: Elastics
                                 USERNAME=TARGET_USERNAME,
                                 PASSWORD=TARGET_PASSWORD,
                                 ENCODED_API_KEY=TARGET_ENCODED_API_KEY,
-                                KIBANA_URI=TARGET_KIBANA_URI
+                                KIBANA_URI=TARGET_KIBANA_URI,
+                                api_key_name="ENCODED_API_KEY"
+
                                 )
         except Exception as e:
             print(f"[-] {e}")
@@ -101,7 +114,8 @@ def elastic_manager(source_client: Elasticsearch = None, target_client: Elastics
                                 USERNAME=SOURCE_USERNAME,
                                 PASSWORD=SOURCE_PASSWORD,
                                 ENCODED_API_KEY=SOURCE_ENCODED_API_KEY,
-                                KIBANA_URI=SOURCE_KIBANA_URI
+                                KIBANA_URI=SOURCE_KIBANA_URI,
+                                api_key_name="SOURCE_ENCODED_API_KEY"
                                 )
         except Exception as e:
             print(f"[-] {e}")
@@ -109,22 +123,22 @@ def elastic_manager(source_client: Elasticsearch = None, target_client: Elastics
             print("[!] Exiting...")
             exit(1)
 
-
+    
     questions = [
         {
             "type": "list",
             "message": "What would you like to do?",
             "name": "action",
             "choices": [
-                f'Migrate Pipelines & Dashboards from {source_client.info().get("cluster_name", "")} -> {target_client.info().get("cluster_name", "")}',
+                f'Migrate Current Pipelines & Dashboards -> {TARGET_ES_URL}',
                 "Download Pipelines & Dashboards",
                 "Upload Pipelines & Dashboards",
                 
-                f'Migrate Only Pipelines from {source_client.info().get("cluster_name", "")} -> {target_client.info().get("cluster_name", "")}',
+                f'Migrate Only Pipelines -> {TARGET_ES_URL}',
                 "Download Dashboards",
                 "Download Pipelines",
                 
-                f'Migrate Only Dashboards from {source_client.info().get("cluster_name", "")} -> {target_client.info().get("cluster_name", "")}',
+                f'Migrate Only Dashboards -> {TARGET_ES_URL}',
                 "Upload Dashboards",
                 "Upload Pipelines",
 
@@ -164,7 +178,7 @@ def elastic_manager(source_client: Elasticsearch = None, target_client: Elastics
             for pipeline in local_pipelines:
                 print(f"[*] {pipeline}")
             return elastic_manager(client=source_client)
-        elif action == f'Migrate Pipelines & Dashboards from {source_client.info().get("cluster_name", "")} -> {target_client.info().get("cluster_name", "")}':
+        elif action == f'Migrate Current Pipelines & Dashboards -> {TARGET_ES_URL}':
             print("[*] Migrating pipelines...")
             migrate_pipelines(source_client=source_client, target_client=target_client)
             print("[*] Migrating dashboards...")
@@ -176,10 +190,10 @@ def elastic_manager(source_client: Elasticsearch = None, target_client: Elastics
                 TARGET_USERNAME=TARGET_USERNAME,
                 TARGET_PASSWORD=TARGET_PASSWORD
             )
-        elif action == f"Migrate Only Pipelines from {source_client.info().get('cluster_name', '')} -> {target_client.info().get('cluster_name', '')}":
+        elif action == f"Migrate Only Pipelines -> {TARGET_ES_URL}":
             print("[*] Migrating pipelines...")
             migrate_pipelines(source_client=source_client, target_client=target_client)
-        elif action == f"Migrate Only Dashboards from {source_client.info().get('cluster_name', '')} -> {target_client.info().get('cluster_name', '')}":
+        elif action == f"Migrate Only Dashboards -> {TARGET_ES_URL}":
             print("[*] Migrating dashboards...")
             migrate_dashboards(
                 SOURCE_KIBANA_URI=SOURCE_KIBANA_URI,

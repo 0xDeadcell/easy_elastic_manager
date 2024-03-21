@@ -156,7 +156,7 @@ if __name__ == "__main__":
     KIBANA_URI = ENV.get("KIBANA_URI", "")
     from elastic_manager import setup_auth
 
-    authenticated_es_client = setup_auth(ELASTIC_ENDPOINT=ES_URL)
+    authenticated_es_client = setup_auth(ELASTIC_ENDPOINT=ES_URL
     authenticated_kibana_client = setup_auth(ELASTIC_ENDPOINT=KIBANA_URI)
     print("[*] Downloading pipelines...")
     # results = download_pipelines(client=ES_URL)
